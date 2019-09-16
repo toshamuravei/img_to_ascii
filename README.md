@@ -12,7 +12,7 @@ $ pip install -r requirements.txt
 $ python img_to_ascii.py
 ```
                                                    
-<pre>                                                   
+```                                                  
                         ____                       
                       qBMMMMhp                     
                      qMB@MBBB#                     
@@ -34,4 +34,4 @@ $ python img_to_ascii.py
                 9@  Y\_ VJ% t]7Z<`    YY           
                  fK__/^C_q U_         _A           
                     ^~&LJ*  f?M=+++r"T             
-</pre>
+```
