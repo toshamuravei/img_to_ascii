@@ -6,7 +6,7 @@ from PIL import Image
 BETA = 2.0
 EPSILON = 1e-6
 N_ITERATIONS = 15
-THRESHOLD = 0.00
+THRESHOLD = 0.0
 A_STR = " !\"#$%&'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\]^_`abcdefghijklmnopqrstuvwxyz{|}~"
 DEFAULT_ASCII = "ascii_monospace.png"
 DEFAULT_IMG = "Mickey-Mouse-2.jpg"
@@ -124,7 +124,6 @@ def get_matrix(mtx, glyph_arr, img_splitted):
         raise AttributeError("Please, specify matrix: V, W ot H")
 
     m_lmb = lambda s: np.column_stack(tuple([flat_and_normalize(x) for x in s]))
-
     base_to_operate = {
         "V": m_lmb(img_splitted),
         "W": m_lmb(glyph_arr),
@@ -135,7 +134,6 @@ def get_matrix(mtx, glyph_arr, img_splitted):
 
 def update_H_mtx(v_mtx, w_mtx, h_mtx):
     v_aprx = w_mtx @ h_mtx
-
     for h_row in range(0, h_mtx.shape[0]):
         for h_col in range(0, h_mtx.shape[1]):
             nmrt = 0.0
@@ -174,34 +172,36 @@ def escaping_map(char):
     return charmap.get(char, char)
 
 
-def represent_as_ascii(h_mtx, vert_chars, hor_chars):
-    result = np.zeros(shape=(vert_chars, hor_chars), dtype=str)
-    p_holder = " "
-    maximums = np.argmax(h_mtx, axis=0)
+def get_ascii_repr(h_mtx, char_vert, char_hor):
+    result = np.zeros(shape=(char_vert, char_hor), dtype=str)
 
     for h_col in range(0, h_mtx.shape[1]):
-        max_row = maximums[h_col]
-        glyph = A_STR[max_row]
-        to_paste = glyph if h_mtx[max_row, h_col] > THRESHOLD else p_holder
+        maximum = 0.0
+        max_idx = 0
 
-        result[int(h_col / hor_chars), h_col % hor_chars] = to_paste
+        for h_row in range(0, h_mtx.shape[0]):
+            if maximum < h_mtx[h_row, h_col]:
+                maximum = h_mtx[h_row, h_col]
+                max_idx = h_row
+        to_paste =  A_STR[max_idx] if maximum >= THRESHOLD else " "
+        result[int(h_col / char_hor), h_col % char_hor] = to_paste
 
     return result
 
 
 def write_to_html(result):
+    with open('ascii_repr.html', 'w') as html_file:
+        html_file.write("<html>")
+        html_file.write("<font face=\"courier\"><pre>")
+        html_file.write("<body>")
+        for i in range(0, result.shape[0]):
+            for j in range(0, result.shape[1]):
+                to_paste = escaping_map(str(result[i, j]))
+                html_file.write(to_paste)
+            html_file.write("\n")
 
-    html_file.write("<html>")
-    html_file.write("<font face=\"courier\"><pre>")
-    html_file.write("<body>")
-    for i in range(0, result.shape[0]):
-        for j in range(0, result.shape[1]):
-            to_paste = escaping_map(str(result[i, j]))
-            html_file.write(to_paste)
-        html_file.write("\n")
-
-    html_file.write("</body>")
-    html_file.write("</html>")
+        html_file.write("</body>")
+        html_file.write("</html>")
 
 
 if __name__ == "__main__":
@@ -218,5 +218,5 @@ if __name__ == "__main__":
             print("%r iterations are made!" % i)
         update_H_mtx(v_mtx, w_mtx, h_mtx)
 
-    result = represent_as_ascii(h_mtx, n_glyphs_vert, n_glyphs_hor)
+    result = get_ascii_repr(h_mtx, n_glyphs_vert, n_glyphs_hor)
     write_to_html(result)
